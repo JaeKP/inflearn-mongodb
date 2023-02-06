@@ -38,7 +38,7 @@ const server = async () => {
 
       // 가상 데이터 생성
       // for (let i = 0; i < 20; i++) {
-      //   await generateFakeData(10, 1, 10);
+      //   await generateFakeData(3, 5, 20);
       // }
     });
   } catch (error) {

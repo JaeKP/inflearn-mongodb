@@ -1,6 +1,6 @@
 import { Router } from "express";
 import mongoose from "mongoose";
-import { User } from "../models/index.js";
+import { Blog, User, Comment } from "../models/index.js";
 const userRouter = Router();
 
 userRouter.get("/", async (req, res) => {
@@ -63,7 +63,15 @@ userRouter.delete("/:userId", async (req, res) => {
     }
 
     // 삭제
-    const user = await User.findOneAndDelete({ _id: userId });
+    const [user] = await Promise.all([
+      User.findOneAndDelete({ _id: userId }),
+      Blog.deleteMany({ "user._id": userId }),
+
+      // $pull: {제거할 데이터: {조건}}
+      Blog.updateMany({ "comments.user._id": userId }, { $pull: { comments: { "user._id": userId } } }),
+      Comment.deleteMany({ user: userId }),
+    ]);
+
     return res.send({ user });
   } catch (error) {
     console.log(error);
@@ -71,7 +79,7 @@ userRouter.delete("/:userId", async (req, res) => {
   }
 });
 
-userRouter.put("/user/:userId", async (req, res) => {
+userRouter.put("/:userId", async (req, res) => {
   try {
     const { userId } = req.params;
 
@@ -95,7 +103,24 @@ userRouter.put("/user/:userId", async (req, res) => {
 
     let user = await User.findById(userId);
     if (age) user.ane = age;
-    if (name) user.name = name;
+
+    // user의 이름이 변경되면 블로그, 댓글에 대한 데이터도 변경해야 한다.
+    if (name) {
+      user.name = name;
+
+      await Promise.all([
+        // updateMany: 다수의 도큐먼트를 수정한다.
+        Blog.updateMany({ "user._id": userId }, { "user.name": name }),
+
+        // array filter를 사용하여 해당 유저가 작성한 모든 코멘트를 수정한다.
+        // 하나의 도큐먼트에서 여러개의 데이터를 수정해야 할때, array filter를 사용하여 조건을 명시한다.
+        await Blog.updateMany(
+          {},
+          { "comments.$[elem].user.name": name },
+          { arrayFilters: [{ "elem.user._id": userId }] }
+        ),
+      ]);
+    }
     await user.save();
     return res.send({ user });
   } catch (error) {

@@ -58,9 +58,18 @@ commentRouter.patch("/:commentId", async (req, res) => {
     Comment.findOneAndUpdate({ _id: commentId }, { content }, { new: true }),
 
     // $를 사용하면 filter를 통해 선택된 도큐먼트를 가리킨다.
-    // 즉, comments.$.content는 comments._id가 comment_id인 comment 객체를 의미한다.
+    // 원래는 comments[index].content = value로 저장해야 하지만 index를 모르기 때문에 $를 사용하는 것이다.
+    // 즉, comments.$는 comments._id가 comment_id인 comment를 의미한다.
     await Blog.updateOne({ "comments._id": commentId }, { "comments.$.content": content }),
   ]);
+
+  return res.send({ comment });
+});
+
+commentRouter.delete("/:commentId", async (req, res) => {
+  const { commentId } = req.params;
+  const comment = await Comment.findOneAndDelete({ _id: commentId });
+  await Blog.updateOne({ "comments._id": commentId }, { $pull: { comments: { _id: commentId } } });
 
   return res.send({ comment });
 });

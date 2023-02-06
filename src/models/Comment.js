@@ -6,6 +6,10 @@ export const CommentSchema = new Schema(
     user: {
       _id: { type: Types.ObjectId, required: true, ref: "user" },
       username: { type: String, required: true },
+      name: {
+        first: { type: String, required: true },
+        last: { type: String, required: true },
+      },
     },
     blog: { type: Types.ObjectId, required: true, ref: "blog" },
   },
