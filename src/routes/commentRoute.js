@@ -25,7 +25,11 @@ commentRouter.post("/", async (req, res) => {
 
     // 저장
     const comment = new Comment({ content, user, blog });
-    await comment.save();
+
+    // Comment는 Blog 모델에 내장되어있기떄문에 데이터를 업데이트해야 한다.
+    // Blog의 comments 필드에 comment를 추가한다.
+    await Promise.all([comment.save(), await Blog.updateOne({ _id: blogId }, { $push: { comments: comment } })]);
+
     return res.send({ comment });
   } catch (error) {
     console.log(error);
@@ -37,8 +41,28 @@ commentRouter.get("/", async (req, res) => {
   const { blogId } = req.params;
   if (!isValidObjectId(blogId)) return res.status(400).send({ error: "blogId is invalid" });
 
-  const comments = await Comment.find({ blog: blogId });
+  const comments = await Comment.find({ blog: blogId }).limit(10);
   return res.send({ comments });
+});
+
+commentRouter.patch("/:commentId", async (req, res) => {
+  const { commentId } = req.params;
+  const { content } = req.body;
+
+  if (typeof content !== "string") {
+    return res.status(400).send({ error: "content is required" });
+  }
+
+  // comments 배열안에 _id의 값이 comment._id와 동일한 것을 찾아서 수정한다.
+  const [comment] = await Promise.all([
+    Comment.findOneAndUpdate({ _id: commentId }, { content }, { new: true }),
+
+    // $를 사용하면 filter를 통해 선택된 도큐먼트를 가리킨다.
+    // 즉, comments.$.content는 comments._id가 comment_id인 comment 객체를 의미한다.
+    await Blog.updateOne({ "comments._id": commentId }, { "comments.$.content": content }),
+  ]);
+
+  return res.send({ comment });
 });
 
 export default commentRouter;

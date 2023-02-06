@@ -1,9 +1,12 @@
 import { Schema, model, Types } from "mongoose";
 
-const CommentSchema = new Schema(
+export const CommentSchema = new Schema(
   {
     content: { type: String, required: true },
-    user: { type: Types.ObjectId, required: true, ref: "user" },
+    user: {
+      _id: { type: Types.ObjectId, required: true, ref: "user" },
+      username: { type: String, required: true },
+    },
     blog: { type: Types.ObjectId, required: true, ref: "blog" },
   },
   { timestamps: true }

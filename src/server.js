@@ -2,6 +2,7 @@ import dotenv from "dotenv";
 import express from "express";
 import mongoose from "mongoose";
 import { userRouter, blogRouter, commentRouter } from "./routes/index.js";
+import generateFakeData from "../faker2.js";
 
 dotenv.config();
 const PASSWORD = process.env.PASSWORD;
@@ -10,13 +11,16 @@ const app = express();
 app.use(express.json());
 
 // mongodb compass connect uri
-const MONGO_URI = `mongodb+srv://admin:${PASSWORD}@mongodbtutorial.5pazsio.mongodb.net/?retryWrites=true&w=majority`;
+const MONGO_URI = `mongodb+srv://admin:${PASSWORD}@mongodbtutorial.5pazsio.mongodb.net/BlogService?retryWrites=true&w=majority`;
 
 const server = async () => {
   try {
     mongoose.set("strictQuery", false);
     let mongodbConnection = await mongoose.connect(MONGO_URI);
+
+    // 디버깅
     mongoose.set("debug", true);
+
     console.log("MongoDB connected");
 
     // json을 객체로 파싱하는 미들웨어
@@ -29,8 +33,13 @@ const server = async () => {
     app.use("/blog/:blogId/comment", commentRouter);
 
     // 클라이언트가 3000포트로 접속할 수 있다. (node Server)
-    app.listen(3000, function () {
+    app.listen(3000, async () => {
       console.log("server start: http://localhost:3000/");
+
+      // 가상 데이터 생성
+      // for (let i = 0; i < 20; i++) {
+      //   await generateFakeData(10, 1, 10);
+      // }
     });
   } catch (error) {
     console.log(error);
