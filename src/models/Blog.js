@@ -26,10 +26,19 @@ const BlogSchema = new Schema(
       },
     },
 
+    commentCount: { type: Number, default: 0, required },
+
+    // 최근 댓글 3개만 부분적으로 내장하여 저장한다.
     comments: [CommentSchema],
   },
   { timestamps: true }
 );
+
+// 인덱스 생성
+BlogSchema.index({ "user._id": 1, updateAt: 1 });
+
+// text Index는 콜렉션 당 한개만 만들 수 있다.
+BlogSchema.index({ title: "text" });
 
 // 1. 가상의 key를 만든다.
 // BlogSchema.virtual("comments", {

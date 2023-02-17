@@ -73,8 +73,15 @@ blogRouter.post("/", async (req, res) => {
 
 blogRouter.get("/", async (req, res) => {
   try {
-    // 연결시킬 데이터를 populate를 사용하여 참조해준다.
-    const blogs = await Blog.find({}).limit(50);
+    // params로 page를 받아서 페이지네이션을 구현한다.
+    let { page } = req.query;
+    page = parseInt(page);
+
+    // 업데이트 순으로 3개씩 페이징처리 하여 전달한다.
+    const blogs = await Blog.find({})
+      .sort({ updateAt: -1 })
+      .skip(page * 3)
+      .limit(3);
     return res.send({ blogs });
   } catch (error) {
     console.log(error);
@@ -87,6 +94,9 @@ blogRouter.get("/:blogId", async (req, res) => {
     const { blogId } = req.params;
     if (!isValidObjectId(blogId)) return res.status(400).send({ error: "blogId is invalid" });
     const blog = await Blog.findById(blogId);
+
+    const commentCount = await Comment.find({ blog: blogId }).countDocuments();
+
     return res.send({ blog });
   } catch (error) {
     console.log(error);

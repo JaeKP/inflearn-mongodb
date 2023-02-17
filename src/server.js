@@ -19,7 +19,7 @@ const server = async () => {
     let mongodbConnection = await mongoose.connect(MONGO_URI);
 
     // 디버깅
-    mongoose.set("debug", true);
+    // mongoose.set("debug", true);
 
     console.log("MongoDB connected");
 
@@ -38,8 +38,9 @@ const server = async () => {
 
       // 가상 데이터 생성
       // for (let i = 0; i < 20; i++) {
-      //   await generateFakeData(3, 5, 20);
+      //   await generateFakeData(10, 10, 10);
       // }
+      // await generateFakeData(1000000, 5, 20);
     });
   } catch (error) {
     console.log(error);
